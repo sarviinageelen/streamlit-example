@@ -4,18 +4,8 @@ import pandas as pd
 import datetime
 
 def fetch_binance_minute_data():
-    base_url = "https://api.binance.com/api/v3/klines"
-    symbol = "BTCUSDT"
-    interval = "1m"
-    limit = 1000  # fetch maximum of 1000 data points
-    
-    params = {
-        "symbol": symbol,
-        "interval": interval,
-        "limit": limit
-    }
-    
-    response = requests.get(base_url, params=params)
+    url = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m"
+    response = requests.get(url)
     
     if response.status_code != 200:
         st.error("Failed to fetch data from Binance.")
