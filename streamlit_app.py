@@ -1,26 +1,30 @@
 import streamlit as st
 import requests
 import pandas as pd
-import datetime
 
-def fetch_binance_minute_data():
-    url = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m"
+def fetch_luno_minute_data():
+    url = "https://ajax.luno.com/ajax/1/udf/history?symbol=XBTMYR&resolution=60&from=1692495226&to=1693679626&countback=329&currencyCode=XBTMYR"
     response = requests.get(url)
     
-    if response.status_code != 200:
-        st.error("Failed to fetch data from Binance.")
+    if response.status_code != 200 or 's' in response.json() and response.json()['s'] != 'ok':
+        st.error("Failed to fetch data from Luno.")
         return None
     
     data = response.json()
-    df = pd.DataFrame(data, columns=['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'])
-    df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
-    df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
+    df = pd.DataFrame({
+        'time': pd.to_datetime(data['t'], unit='s'),
+        'open': data['o'],
+        'high': data['h'],
+        'low': data['l'],
+        'close': data['c'],
+        'volume': data['v']
+    })
     
-    return df[['open_time', 'open', 'high', 'low', 'close', 'volume']]
+    return df
 
-st.title('Binance BTCUSDT Minute Data')
+st.title('Luno XBTMYR Minute Data')
 
-df = fetch_binance_minute_data()
+df = fetch_luno_minute_data()
 
 if df is not None:
     st.write(df)
