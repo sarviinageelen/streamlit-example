@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import pytz
 
 def fetch_luno_minute_data():
     url = "https://ajax.luno.com/ajax/1/udf/history?symbol=XBTMYR&resolution=60&from=1692495226&to=1693679626&countback=329&currencyCode=XBTMYR"
@@ -13,11 +12,14 @@ def fetch_luno_minute_data():
     
     data = response.json()
     
-    # Convert timestamp to GMT+8 date-time format
+    # Convert timestamp to datetime format
     df = pd.DataFrame({
-        'time': pd.to_datetime(data['t'], unit='s').dt.tz_localize('UTC').dt.tz_convert('Asia/Kuala_Lumpur'),
+        'time': pd.to_datetime(data['t'], unit='s'),
         'close': data['c']
     })
+    
+    # Adjust the time to GMT+8
+    df['time'] = df['time'] + pd.Timedelta(hours=8)
     
     return df
 
