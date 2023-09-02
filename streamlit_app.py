@@ -1,38 +1,37 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
+import requests
+import pandas as pd
+import datetime
 
-"""
-# Welcome to Streamlit!
+def fetch_binance_minute_data():
+    base_url = "https://api.binance.com/api/v3/klines"
+    symbol = "BTCUSDT"
+    interval = "1m"
+    limit = 1000  # fetch maximum of 1000 data points
+    
+    params = {
+        "symbol": symbol,
+        "interval": interval,
+        "limit": limit
+    }
+    
+    response = requests.get(base_url, params=params)
+    
+    if response.status_code != 200:
+        st.error("Failed to fetch data from Binance.")
+        return None
+    
+    data = response.json()
+    df = pd.DataFrame(data, columns=['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'])
+    df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
+    df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
+    
+    return df[['open_time', 'open', 'high', 'low', 'close', 'volume']]
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+st.title('Binance BTCUSDT Minute Data')
 
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+df = fetch_binance_minute_data()
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
-
-
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
-
-    Point = namedtuple('Point', 'x y')
-    data = []
-
-    points_per_turn = total_points / num_turns
-
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
-
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+if df is not None:
+    st.write(df)
+    st.line_chart(df[['open', 'high', 'low', 'close']])
