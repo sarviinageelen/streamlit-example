@@ -29,7 +29,7 @@ def fetch_luno_minute_data():
     return df
 
 def fetch_binance_minute_data():
-    url = "https://api.binance.com/api/v3/uiKlines?symbol=BTCUSDT&interval=1m&limit=500"
+    url = "https://data.binance.com/api/v3/uiKlines?symbol=BTCUSDT&interval=1m&limit=500"
     response = requests.get(url)
     
     if response.status_code != 200:
