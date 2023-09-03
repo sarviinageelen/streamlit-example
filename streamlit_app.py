@@ -45,6 +45,18 @@ def fetch_binance_minute_data():
     
     return df[['open_time', 'close']].rename(columns={'open_time': 'time', 'close': 'close_BTCUSDT'})
 
+API_KEY = 'fa5a93fd89864b948ec42ca316a6646a'  # Replace with your API key from Exchange Rates API
+
+def fetch_usd_to_myr_conversion_rate():
+    url = f"https://open.er-api.com/v6/latest/USD"
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        st.error("Failed to fetch conversion rate from Exchange Rates API.")
+        return 1.0  # Default conversion rate
+    
+    data = response.json()
+    return data['rates']['MYR']
 
 st.title('Luno XBTMYR and Binance BTCUSDT Data (Close Price)')
 
@@ -52,6 +64,8 @@ luno_df = fetch_luno_minute_data()
 binance_df = fetch_binance_minute_data()
 
 if luno_df is not None and binance_df is not None:
+    conversion_rate = fetch_usd_to_myr_conversion_rate()
+    binance_df['close_BTCUSDT'] = binance_df['close_BTCUSDT'].astype(float) * conversion_rate
 
     chart1 = alt.Chart(luno_df).mark_line(color='blue').encode(
         x='time:T',
@@ -67,7 +81,7 @@ if luno_df is not None and binance_df is not None:
         y='close_BTCUSDT:Q',
         tooltip=['time', 'close_BTCUSDT']
     ).properties(
-        title='Binance BTCUSDT Close Price',
+        title='Binance BTCUSDT (Converted to MYR) Close Price',
         width=400
     )
 
