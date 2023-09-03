@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import altair as alt
 
 def fetch_luno_minute_data():
     url = "https://ajax.luno.com/ajax/1/udf/history?symbol=XBTMYR&resolution=60&from=1692495226&to=1693679626&countback=329&currencyCode=XBTMYR"
@@ -28,7 +29,7 @@ def fetch_luno_minute_data():
     return df
 
 def fetch_binance_minute_data():
-    url = "https://data.binance.com/api/v3/uiKlines?symbol=BTCUSDT&interval=1m&limit=500"
+    url = "https://api.binance.com/api/v3/uiKlines?symbol=BTCUSDT&interval=1m&limit=500"
     response = requests.get(url)
     
     if response.status_code != 200:
@@ -50,6 +51,26 @@ luno_df = fetch_luno_minute_data()
 binance_df = fetch_binance_minute_data()
 
 if luno_df is not None and binance_df is not None:
-    merged_df = pd.merge_asof(luno_df, binance_df, on='time', direction='nearest').set_index('time')
-    st.write(merged_df)
-    st.line_chart(merged_df)
+    merged_df = pd.merge_asof(luno_df, binance_df, on='time', direction='nearest')
+    
+    chart1 = alt.Chart(merged_df).mark_line().encode(
+        x='time:T',
+        y='close_XBTMYR:Q',
+        tooltip=['time', 'close_XBTMYR', 'close_BTCUSDT'],
+        color=alt.value('blue')
+    ).properties(
+        title='Luno XBTMYR Close Price'
+    )
+    
+    chart2 = alt.Chart(merged_df).mark_line().encode(
+        x='time:T',
+        y='close_BTCUSDT:Q',
+        color=alt.value('red')
+    ).properties(
+        title='Binance BTCUSDT Close Price'
+    )
+    
+    st.altair_chart(chart1 + chart2)
+
+else:
+    st.write("Failed to fetch and merge data.")
