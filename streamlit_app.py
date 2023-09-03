@@ -6,11 +6,15 @@ def fetch_luno_minute_data():
     url = "https://ajax.luno.com/ajax/1/udf/history?symbol=XBTMYR&resolution=60&from=1692495226&to=1693679626&countback=329&currencyCode=XBTMYR"
     response = requests.get(url)
     
-    if response.status_code != 200 or 's' in response.json() and response.json()['s'] != 'ok':
-        st.error("Failed to fetch data from Luno.")
+    if response.status_code != 200:
+        st.error(f"Failed to fetch data from Luno. Status Code: {response.status_code}. Message: {response.text}")
         return None
-    
+
     data = response.json()
+    
+    if 's' in data and data['s'] != 'ok':
+        st.error(f"Failed to fetch data from Luno. Message: {data['s']}")
+        return None
     
     # Convert timestamp to datetime format
     df = pd.DataFrame({
@@ -28,7 +32,7 @@ def fetch_binance_minute_data():
     response = requests.get(url)
     
     if response.status_code != 200:
-        st.error("Failed to fetch data from Binance.")
+        st.error(f"Failed to fetch data from Binance. Status Code: {response.status_code}. Message: {response.text}")
         return None
     
     data = response.json()
