@@ -45,32 +45,36 @@ def fetch_binance_minute_data():
     
     return df[['open_time', 'close']].rename(columns={'open_time': 'time', 'close': 'close_BTCUSDT'})
 
+
 st.title('Luno XBTMYR and Binance BTCUSDT Data (Close Price)')
 
 luno_df = fetch_luno_minute_data()
 binance_df = fetch_binance_minute_data()
 
 if luno_df is not None and binance_df is not None:
-    merged_df = pd.merge_asof(luno_df, binance_df, on='time', direction='nearest')
-    
-    chart1 = alt.Chart(merged_df).mark_line().encode(
+
+    chart1 = alt.Chart(luno_df).mark_line(color='blue').encode(
         x='time:T',
         y='close_XBTMYR:Q',
-        tooltip=['time', 'close_XBTMYR', 'close_BTCUSDT'],
-        color=alt.value('blue')
+        tooltip=['time', 'close_XBTMYR']
     ).properties(
-        title='Luno XBTMYR Close Price'
+        title='Luno XBTMYR Close Price',
+        width=400
     )
-    
-    chart2 = alt.Chart(merged_df).mark_line().encode(
+
+    chart2 = alt.Chart(binance_df).mark_line(color='red').encode(
         x='time:T',
         y='close_BTCUSDT:Q',
-        color=alt.value('red')
+        tooltip=['time', 'close_BTCUSDT']
     ).properties(
-        title='Binance BTCUSDT Close Price'
+        title='Binance BTCUSDT Close Price',
+        width=400
     )
-    
-    st.altair_chart(chart1 + chart2)
+
+    # Display charts side by side
+    col1, col2 = st.columns(2)
+    col1.altair_chart(chart1)
+    col2.altair_chart(chart2)
 
 else:
     st.write("Failed to fetch and merge data.")
